@@ -79,7 +79,7 @@ func (i *issueOption) Run() error {
 		return data[i].UniqueId < data[j].UniqueId
 	})
 	for _, v := range data {
-		_, err = fmt.Fprintf(i.Out, "%d\t%s\n", v.UniqueId, v.Name)
+		_, err = fmt.Fprintf(i.Out, "%-15d\t%s\n", v.UniqueId, v.Name)
 	}
 
 	return err
@@ -126,6 +126,6 @@ func (i *issueOption) writeFile(content string) error {
 
 func (i *issueOption) printContextHeaders(out io.Writer) error {
 	columnNames := []any{"UNIQUEID", "NAME"}
-	_, err := fmt.Fprintf(out, "%s\t%s\n", columnNames...)
+	_, err := fmt.Fprintf(out, "%-15s\t%s\n", columnNames...)
 	return err
 }

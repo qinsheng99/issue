@@ -119,6 +119,6 @@ func (o *repoOption) Validate() error {
 
 func (o *repoOption) printContextHeaders(out io.Writer) error {
 	columnNames := []any{"REPOID", "REPONAME"}
-	_, err := fmt.Fprintf(out, "%s\t%s\n", columnNames...)
+	_, err := fmt.Fprintf(out, "%-10s\t%s\n", columnNames...)
 	return err
 }

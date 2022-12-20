@@ -84,6 +84,11 @@ func Cmd() *cobra.Command {
 				newCmdGet(s),
 			},
 		},
+		{
+			Commands: []*cobra.Command{
+				newCmdCreate(s),
+			},
+		},
 	}
 
 	group.Add(issue)
