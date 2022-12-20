@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qinsheng99/issue/util"
-	"github.com/spf13/cobra"
 	"io"
 	"io/fs"
 	"io/ioutil"
 	"net/url"
 	"sort"
 	"strconv"
+
+	"github.com/qinsheng99/issue/util"
+	"github.com/spf13/cobra"
 )
 
 const basefile = "%s.txt"
@@ -78,15 +79,10 @@ func (i *issueOption) Run() error {
 		return data[i].UniqueId < data[j].UniqueId
 	})
 	for _, v := range data {
-		_, err = fmt.Fprintf(i.Out, "%-20s\t%d\n", v.Name, v.UniqueId)
+		_, err = fmt.Fprintf(i.Out, "%d\t%s\n", v.UniqueId, v.Name)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-
+	return err
 }
 
 func (i *issueOption) uniqueOne() error {
@@ -129,7 +125,7 @@ func (i *issueOption) writeFile(content string) error {
 }
 
 func (i *issueOption) printContextHeaders(out io.Writer) error {
-	columnNames := []any{"NAME", "UNIQUEID"}
-	_, err := fmt.Fprintf(out, "%-20s\t%s\n", columnNames...)
+	columnNames := []any{"UNIQUEID", "NAME"}
+	_, err := fmt.Fprintf(out, "%s\t%s\n", columnNames...)
 	return err
 }

@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qinsheng99/issue/util"
-	"github.com/spf13/cobra"
+	"io"
 	"net/url"
 	"strconv"
-	"strings"
+
+	"github.com/qinsheng99/issue/util"
+	"github.com/spf13/cobra"
 )
 
 type repoOption struct {
@@ -39,7 +40,7 @@ func newRepoCmd(s Streams, h util.ReqImpl) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.name, "name", "n", "", "repo name")
 	cmd.Flags().IntVarP(&o.page, "page", "p", 1, "get the number of pages for the warehouse")
-	cmd.Flags().IntVarP(&o.size, "size", "s", 10, "get the number of sizes for the warehouse")
+	cmd.Flags().IntVarP(&o.size, "size", "s", 20, "get the number of sizes for the warehouse")
 
 	cmd.Flags().BoolVarP(&o.accurate, "accurate", "a", o.accurate, "whether accurate search")
 
@@ -59,7 +60,10 @@ func (o *repoOption) Run() error {
 
 	var res = struct {
 		baseResp
-		Result []string `json:"result"`
+		Result []struct {
+			Name string `json:"fullRepoName"`
+			Id   int64  `json:"repoId"`
+		} `json:"result"`
 	}{}
 
 	_, err := o.h.CustomRequest(u, "GET", nil, nil, v, &res)
@@ -71,8 +75,13 @@ func (o *repoOption) Run() error {
 		return fmt.Errorf(res.Msg)
 	}
 
-	_, _ = fmt.Fprintln(o.Out, strings.Join(res.Result, "\n"))
-	return nil
+	if err = o.printContextHeaders(o.Out); err != nil {
+		return err
+	}
+	for _, s := range res.Result {
+		_, err = fmt.Fprintf(o.Out, "%d\t%s\n", s.Id, s.Name)
+	}
+	return err
 }
 
 func (o *repoOption) findAccurate() error {
@@ -83,6 +92,7 @@ func (o *repoOption) findAccurate() error {
 		baseResp
 		Result struct {
 			Name string `json:"fullRepoName"`
+			Id   int64  `json:"repoId"`
 		} `json:"result"`
 	}{}
 	_, err := o.h.CustomRequest(u, "GET", nil, nil, v, &res)
@@ -92,8 +102,11 @@ func (o *repoOption) findAccurate() error {
 	if res.Code != 0 {
 		return fmt.Errorf(res.Msg)
 	}
-	_, _ = fmt.Fprint(o.Out, res.Result.Name)
-	return nil
+	if err = o.printContextHeaders(o.Out); err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(o.Out, "%d\t%s\n", res.Result.Id, res.Result.Name)
+	return err
 }
 
 func (o *repoOption) Validate() error {
@@ -102,4 +115,10 @@ func (o *repoOption) Validate() error {
 	}
 
 	return nil
+}
+
+func (o *repoOption) printContextHeaders(out io.Writer) error {
+	columnNames := []any{"REPOID", "REPONAME"}
+	_, err := fmt.Fprintf(out, "%s\t%s\n", columnNames...)
+	return err
 }
