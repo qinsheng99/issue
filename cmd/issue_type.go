@@ -18,10 +18,16 @@ type issueOption struct {
 	Streams
 	h util.ReqImpl
 
-	name     string
-	file     bool
-	filename string
+	name string
+	file bool
 }
+
+const issueExample = `
+# get all issue type list
+issue get issue-type or issue get it
+# get issue template(default print os.Stdout)
+issue get it -n [name]
+`
 
 func newIssueOption(s Streams, h util.ReqImpl) *issueOption {
 	return &issueOption{Streams: s, h: h}
@@ -34,13 +40,13 @@ func newIssueTypeCmd(s Streams, h util.ReqImpl) *cobra.Command {
 		Use:     "issue_type",
 		Aliases: []string{"it"},
 		Short:   "get openeuler community issue type",
+		Example: issueExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			checkErr(o.Run())
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.name, "name", "n", o.name, "issue type name")
-	cmd.Flags().StringVar(&o.filename, "filename", o.filename, "output file name default[issue.txt]")
+	cmd.Flags().StringVarP(&o.name, "name", "n", o.name, "issue type name use to obtain a issue template")
 	cmd.Flags().BoolVarP(&o.file, "file", "f", o.file, "output the content to a file")
 
 	return cmd
@@ -119,10 +125,6 @@ func (i *issueOption) uniqueOne() error {
 
 func (i *issueOption) writeFile(content string) error {
 	var file = fmt.Sprintf(basefile, "issue")
-
-	if len(i.filename) > 0 {
-		file = fmt.Sprintf(basefile, i.filename)
-	}
 
 	return ioutil.WriteFile(file, []byte(content), fs.ModePerm)
 }
