@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qinsheng99/issue/util"
-	"github.com/spf13/cobra"
 	"io"
 	"io/fs"
 	"io/ioutil"
 	"net/url"
 	"sort"
+
+	"github.com/qinsheng99/issue/util"
+	"github.com/spf13/cobra"
 )
 
 const basefile = "%s.txt"
