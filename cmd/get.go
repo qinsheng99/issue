@@ -16,9 +16,9 @@ func newGetOption(s base) *getOption {
 
 const getExample = `
 		# List all repo in output
-		issue get repo
+		issue get repo [options]
 		# List all issue_type in output
-		issue get issue-type
+		issue get issue-type [options]
 	`
 
 func newCmdGet(s base) *cobra.Command {

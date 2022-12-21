@@ -2,15 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qinsheng99/issue/util"
+	"github.com/spf13/cobra"
 	"io"
 	"io/fs"
 	"io/ioutil"
 	"net/url"
 	"sort"
-	"strconv"
-
-	"github.com/qinsheng99/issue/util"
-	"github.com/spf13/cobra"
 )
 
 const basefile = "%s.txt"
@@ -19,7 +17,7 @@ type issueOption struct {
 	Streams
 	h util.ReqImpl
 
-	uniqueId int
+	name     string
 	file     bool
 	filename string
 }
@@ -40,7 +38,7 @@ func newIssueTypeCmd(s Streams, h util.ReqImpl) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&o.uniqueId, "unique", "u", o.uniqueId, "issue type id")
+	cmd.Flags().StringVarP(&o.name, "name", "n", o.name, "issue type name")
 	cmd.Flags().StringVar(&o.filename, "filename", o.filename, "output file name default[issue.txt]")
 	cmd.Flags().BoolVarP(&o.file, "file", "f", o.file, "output the content to a file")
 
@@ -48,15 +46,15 @@ func newIssueTypeCmd(s Streams, h util.ReqImpl) *cobra.Command {
 }
 
 func (i *issueOption) Run() error {
-	if i.uniqueId != 0 {
+	if len(i.name) > 0 {
 		return i.uniqueOne()
 	}
 
-	u := "http://localhost:8000/v1/issue-type/list"
+	u := "https://quickissue.openeuler.org/api-issues/issues/types"
 	var res = struct {
 		baseResp
-		Result []struct {
-			UniqueId int64  `json:"uniqueId"`
+		Data []struct {
+			UniqueId int64  `json:"id"`
 			Name     string `json:"name"`
 		}
 	}{}
@@ -66,7 +64,7 @@ func (i *issueOption) Run() error {
 		return err
 	}
 
-	if res.Code != 0 {
+	if res.Code != 200 {
 		return fmt.Errorf(res.Msg)
 	}
 
@@ -74,7 +72,7 @@ func (i *issueOption) Run() error {
 	if err != nil {
 		return err
 	}
-	var data = res.Result
+	var data = res.Data
 	sort.Slice(data, func(i, j int) bool {
 		return data[i].UniqueId < data[j].UniqueId
 	})
@@ -86,13 +84,13 @@ func (i *issueOption) Run() error {
 }
 
 func (i *issueOption) uniqueOne() error {
-	u := "http://localhost:8000/v1/issue-type/one"
+	u := "https://quickissue.openeuler.org/api-issues/issues/types"
 	var v = url.Values{}
-	v.Add("unique", strconv.Itoa(i.uniqueId))
+	v.Add("name", i.name)
 	var res = struct {
 		baseResp
-		Result struct {
-			UniqueId int64  `json:"uniqueId"`
+		Data []struct {
+			UniqueId int64  `json:"id"`
 			Name     string `json:"name"`
 			Template string `json:"template"`
 		}
@@ -102,15 +100,19 @@ func (i *issueOption) uniqueOne() error {
 	if err != nil {
 		return err
 	}
-	if res.Code != 0 {
+	if res.Code != 200 {
 		return fmt.Errorf(res.Msg)
 	}
 
-	if i.file {
-		return i.writeFile(res.Result.Template)
+	if len(res.Data) == 0 {
+		return fmt.Errorf("not found issue type : %s", i.name)
 	}
 
-	_, err = fmt.Fprintln(i.Out, res.Result.Template)
+	if i.file {
+		return i.writeFile(res.Data[0].Template)
+	}
+
+	_, err = fmt.Fprintln(i.Out, res.Data[0].Template)
 	return err
 }
 

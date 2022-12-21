@@ -93,5 +93,7 @@ func Cmd() *cobra.Command {
 
 	group.Add(issue)
 
+	issue.CompletionOptions.DisableDefaultCmd = true
+
 	return issue
 }
